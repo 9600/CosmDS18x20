@@ -1,4 +1,4 @@
-/* Nanode + DS1820 digital thermometer --> Pachube.
+/* Nanode + DS1820 digital thermometer --> Cosm.
 
 Copyright 2012 Andrew Back, and Gregor van Egdom.
 
@@ -37,9 +37,9 @@ Hardware setup:
 #define MY_MAC_ADDRESS {0x54,0x55,0x58,0x10,0x00,0x25}              // Must be unique
 #define USE_DHCP                                                    // Comment out to use static network parameters
 
-#define PACHUBE_API_KEY "your-secret-pachube-API-key" 		    // change this to your API key
+#define COSM_API_KEY "your-secret-cosm-API-key" 		    // change this to your API key
 #define HTTPFEEDPATH "/v2/feeds/50266"                              // Change this to the relative URL of your feed
-#define DELAY_BETWEEN_PACHUBE_POSTS_MS 2000L                        // Post frequency in milliseconds
+#define DELAY_BETWEEN_COSM_POSTS_MS 2000L                        // Post frequency in milliseconds
         
 #ifndef USE_DHCP                                                    // If not using DHCP you need to set the network parameters
   #define MY_IP_ADDRESS {192,168,  0, 25}
@@ -48,7 +48,7 @@ Hardware setup:
   #define MY_DNS_SERVER {192,168,  0,  1}
 #endif
         
-// Pachube feed template. See: http://api.pachube.com/v2/
+// Cosm feed template. See: http://api.cosm.com/v2/
 
 #define FEED_POST_MAX_LENGTH 256
 static char feedTemplate[] = "{\"version\":\"1.0.0\",\"datastreams\":[{\"id\":\"ActualTemp\", \"current_value\":\"%d\"}]}";
@@ -63,12 +63,12 @@ uint8_t fillOutTemplateWithSensorValues(uint16_t sensorValue1){
 * End sketch configuration                                .*
 * * * * * * * * * * * * * * * * * * * * * * * * * * ** * * */
 
-#define FEEDHOSTNAME "api.pachube.com\r\nX-PachubeApiKey: " PACHUBE_API_KEY
-#define FEEDWEBSERVER_VHOST "api.pachube.com"
+#define FEEDHOSTNAME "api.cosm.com\r\nX-ApiKey: " COSM_API_KEY
+#define FEEDWEBSERVER_VHOST "api.cosm.com"
 #define BUFFER_SIZE 550
 
 static uint8_t mymac[6] = MY_MAC_ADDRESS;
-static uint8_t websrvip[4] = { 0, 0, 0, 0 };                        // Pachube server IP (resolved by DNS)
+static uint8_t websrvip[4] = { 0, 0, 0, 0 };                        // Cosm server IP (resolved by DNS)
 static char hoststr[150] = FEEDWEBSERVER_VHOST;
 static uint8_t buf[BUFFER_SIZE+1];
   
@@ -99,7 +99,7 @@ EtherShield es=EtherShield();
 
 void setup(){
   Serial.begin(SERIAL_BAUD_RATE);
-  Serial.println("Nanode + DS1820 digital thermometer, posting to Pachube");      
+  Serial.println("Nanode + DS1820 digital thermometer, posting to Cosm");      
   sensors.begin();
   if (!sensors.getAddress(DS1820Thermometer, 0))
   Serial.println("Unable to find address for Device 0");
@@ -135,13 +135,13 @@ void loop(){
   long currentTime = millis();                                      // Timer used to trigger action
   int plen = es.ES_enc28j60PacketReceive(BUFFER_SIZE, buf);         // Start receiving packets and buffer
   es.ES_packetloop_icmp_tcp(buf,plen);
-  // Now post to Pachube
-  if(currentTime - lastPostTimestamp > DELAY_BETWEEN_PACHUBE_POSTS_MS || firstTimeFlag){   
+  // Now post to Cost
+  if(currentTime - lastPostTimestamp > DELAY_BETWEEN_COSM_POSTS_MS || firstTimeFlag){   
     firstTimeFlag = false;
     sensors.requestTemperatures();                                  // Send the command to read temperatures
     DS1820Temp = sensors.getTempC(DS1820Thermometer);               // Store temperature from the DS1820
-    if(fillOutTemplateWithSensorValues(DS1820Temp)){                // If filling out the Pachube template is succesful, post.
-      Serial.print("Posting sensor values to Pachube: ");
+    if(fillOutTemplateWithSensorValues(DS1820Temp)){                // If filling out the Cosm template is succesful, post.
+      Serial.print("Posting sensor values to Cosm: ");
       Serial.print(DS1820Temp, DEC);
       Serial.println("");
       es.ES_client_http_post(PSTR(HTTPFEEDPATH),PSTR(FEEDWEBSERVER_VHOST),PSTR(FEEDHOSTNAME), PSTR("PUT "), feedPost, &sensor_feed_post_callback);  
