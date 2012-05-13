@@ -1,0 +1,1 @@
+Nanode/Arduino sketch that reads temperature from a DS1820 1-wire digital thermometer and uses it to update a Pachube feed.
